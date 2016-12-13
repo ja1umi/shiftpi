@@ -1,15 +1,20 @@
 '''
-A library that allows simple access to 74HC595 shift registers on a Raspberry Pi using any digital I/O pins.
+A library that allows simple access to 74HC595 shift registers connected to the FT232H breakout board.
 '''
 
-
-import RPi.GPIO as GPIO
+# Import GPIO and FT232H modules.
+import Adafruit_GPIO as GPIO
+import Adafruit_GPIO.FT232H as FT232H
 from time import sleep
 
-GPIO.setmode(GPIO.BCM)
+# Temporarily disable the built-in FTDI serial driver on Mac & Linux platforms.
+FT232H.use_FT232H()
 
-version = "0.2"
-version_info = (0, 2)
+# Create an FT232H object that grabs the first available FT232H device found.
+ft232h = FT232H.FT232H()
+
+version = "0.2ft"
+version_info = (0, 2, "ft")
 
 # Define MODES
 ALL  = -1
@@ -17,9 +22,9 @@ HIGH = 1
 LOW  = 0
 
 # Define pins
-_SER_pin   = 25    #pin 14 on the 75HC595
-_RCLK_pin  = 24    #pin 12 on the 75HC595
-_SRCLK_pin = 23   #pin 11 on the 75HC595
+_SER_pin   = 8    #pin C0 on the FT232H
+_RCLK_pin  = 9    #pin C1 on the FT232H
+_SRCLK_pin = 10   #pin C2 on the FT232H
 
 # is used to store states of all pins
 _registers = list()
@@ -45,15 +50,15 @@ def pinsSetup(**kwargs):
         _RCLK_pin = kwargs.get('rclk', _RCLK_pin)
         _SRCLK_pin = kwargs.get('srclk', _SRCLK_pin)
 
-    if custompins:
-        if _SER_pin != serpin or _RCLK_pin != rclkpin or _SRCLK_pin != srclkpin:
-            GPIO.setwarnings(True)
-    else:
-        GPIO.setwarnings(False)
+#    if custompins:
+#        if _SER_pin != serpin or _RCLK_pin != rclkpin or _SRCLK_pin != srclkpin:
+#            GPIO.setwarnings(True)
+#    else:
+#        GPIO.setwarnings(False)
 
-    GPIO.setup(_SER_pin, GPIO.OUT)
-    GPIO.setup(_RCLK_pin, GPIO.OUT)
-    GPIO.setup(_SRCLK_pin, GPIO.OUT)
+    ft232h.setup(_SER_pin, GPIO.OUT)
+    ft232h.setup(_RCLK_pin, GPIO.OUT)
+    ft232h.setup(_SRCLK_pin, GPIO.OUT)
 
 def startupMode(mode, execute = False):
     '''
@@ -122,16 +127,16 @@ def _setPin(pin, mode):
 
 def _execute():
     all_pins = _all_pins()
-    GPIO.output(_RCLK_pin, GPIO.LOW)
+    ft232h.output(_RCLK_pin, GPIO.LOW)
 
     for pin in range(all_pins -1, -1, -1):
-        GPIO.output(_SRCLK_pin, GPIO.LOW)
+        ft232h.output(_SRCLK_pin, GPIO.LOW)
 
         pin_mode = _registers[pin]
 
-        GPIO.output(_SER_pin, pin_mode)
-        GPIO.output(_SRCLK_pin, GPIO.HIGH)
+        ft232h.output(_SER_pin, pin_mode)
+        ft232h.output(_SRCLK_pin, GPIO.HIGH)
 
-    GPIO.output(_RCLK_pin, GPIO.HIGH)
+    ft232h.output(_RCLK_pin, GPIO.HIGH)
 
 pinsSetup()
