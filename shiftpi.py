@@ -14,7 +14,7 @@ FT232H.use_FT232H()
 ft232h = FT232H.FT232H()
 
 version = "0.2ft"
-version_info = (0, 2, "ft")
+version_info = (0, 2, 'ft')
 
 # Define MODES
 ALL  = -1
@@ -98,6 +98,17 @@ def digitalWrite(pin, mode):
 
         _setPin(pin, mode)
     _execute()
+
+def digitalWrite8(registernum, data):
+	'''
+	Set 8 pins (bits) in one operation
+	'''
+	_from = (registernum - 1) * 8
+	_to = _from + 8
+	_bitlist = list("{0:0>8b}".format(data))
+	_bitlist = _bitlist[::-1]
+	_registers[_from:_to] = _bitlist
+	_execute()
 
 def delay(millis):
     '''
