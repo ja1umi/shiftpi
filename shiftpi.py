@@ -102,12 +102,21 @@ def digitalWrite(pin, mode):
 def digitalWrite8(registernum, data):
 	'''
 	Set 8 pins (bits) in one operation
+	Value of variable registernum should range from 1 to _number_of_shiftregisters
 	'''
-	_from = (registernum - 1) * 8
-	_to = _from + 8
-	_bitlist = list("{0:0>8b}".format(data))
-	_bitlist = _bitlist[::-1]
-	_registers[_from:_to] = _bitlist
+	if registernum > _number_of_shiftregisters:
+		raise ValueError("The registernum can be less than or equal to the number of shiftregisters")
+	fromPin = (registernum - 1) * 8
+	bitPattern = map(int, list("{0:0>8b}".format(data & 0xFF))[::-1])
+#	print "data=",data, bitPattern[::-1]
+	for idx, mode in enumerate(bitPattern):
+#		print "pin=",fromPin + idx, "mode=", mode
+		if mode == HIGH:
+			_setPin(fromPin + idx, HIGH)
+#			print "_setPin(", fromPin + idx, ",", HIGH, ")"
+		else:
+			_setPin(fromPin + idx, LOW)
+#			print "_setPin(", fromPin + idx, ",", LOW, ")"
 	_execute()
 
 def delay(millis):
